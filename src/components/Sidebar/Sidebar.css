@@ -1,0 +1,27 @@
+/* Sidebar.css */
+.sidebar {
+    background-color: #f8f9fa; /* Light background */
+    transition: all 0.3s; /* Smooth transition */
+  }
+  
+  .sidebar .list-group-item {
+    border: none; /* Remove borders */
+    transition: background-color 0.3s; /* Smooth background color transition */
+  }
+  
+  .sidebar .list-group-item:hover {
+    background-color: #e9ecef; /* Background color on hover */
+    color: #495057; /* Text color on hover */
+  }
+  
+  .sidebar .list-group-item .fa-icon {
+    font-size: 1.2rem; /* Increase icon size */
+  }
+  
+  /* Responsive design for smaller screens */
+  @media (max-width: 768px) {
+    .sidebar {
+      width: 200px; /* Reduce width on small screens */
+    }
+  }
+  
