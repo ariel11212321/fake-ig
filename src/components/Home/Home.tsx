@@ -8,14 +8,21 @@ import useHttp from '../../hooks/useHttp';
 import config from '../../config.json';
 import Post from '../Post';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/AppThemeContext';
 export default function Home() {
   const { user } = useUser();
   const [posts, setPosts] = useState([]);
   const navigate = useNavigate();
   const { sendRequest, error, isLoading } = useHttp();
   const {token} = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
+
+    if(!token) {
+      navigate("/login");
+    }
+
     const fetchPosts = async () => {
       const url = `${config.REACT_APP_SERVER_URL}/api/posts`;
       try {
@@ -29,10 +36,10 @@ export default function Home() {
     };
 
     fetchPosts();
-  }, [sendRequest]);
+  }, [sendRequest, token]);
 
   return (
-    <div className="d-flex">
+    <div className={`d-flex ${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`}>
       <Sidebar />
       <div className="container">
       <div className="d-flex align-items-center mt-4"> {/* Flex container */}

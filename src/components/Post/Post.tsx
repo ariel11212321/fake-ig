@@ -4,6 +4,8 @@ import { HeartIcon, MessageCircleIcon, SendIcon, BookmarkIcon } from 'lucide-rea
 import config from '../../config.json';
 import { useAuth } from '../../contexts/AuthContext';
 import useHttp from '../../hooks/useHttp';
+import Comment from '../Comment';
+import { useTheme } from '../../contexts/AppThemeContext';
 interface PostProps {
   post: {
     id: string;
@@ -28,6 +30,7 @@ export default function InstagramPost({ post, edit, onEditSubmit }: PostProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [user, setUser] = useState<any>(null);
   const {token} = useAuth();
+  const{ theme } = useTheme();
   const {sendRequest} = useHttp();
 
 
@@ -56,8 +59,8 @@ export default function InstagramPost({ post, edit, onEditSubmit }: PostProps) {
   }
 
   return (
-    <div className="bg-white border rounded-lg shadow-md max-w-md mx-auto">
-      <div className="flex items-center p-3">
+    <div className={`${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'} border rounded-lg shadow-md max-w-md mx-auto `}>
+      <div className="flex items-center p-3"> 
         <Avatar className="mr-3">
           <AvatarImage src={`${config.REACT_APP_SERVER_URL+"/"+user.image}`} alt={user.name} className="w-8 h-8 rounded-full" />
           <AvatarFallback>{user.name}</AvatarFallback>
@@ -73,7 +76,7 @@ export default function InstagramPost({ post, edit, onEditSubmit }: PostProps) {
         <div className="flex justify-between mb-2">
           <div className="flex space-x-4">
             <HeartIcon
-              className={`w-7 h-7 cursor-pointer ${isLiked ? 'fill-red-500 text-red-500' : 'text-black'}`}
+              className={`w-7 h-7 cursor-pointer ${isLiked ? 'fill-red-500 text-red-500' : theme === 'dark' ? 'text-white' : 'text-black' }`}
               onClick={() => setIsLiked(!isLiked)}
             />
             <MessageCircleIcon className="w-7 h-7 cursor-pointer" />
@@ -113,13 +116,17 @@ export default function InstagramPost({ post, edit, onEditSubmit }: PostProps) {
             </p>
             {tags.length > 0 && (
               <p className="text-blue-500">
-                {tags.map((tag) => `#${tag}`).join(' ')}
+                {tags.map((tag) => `@${tag}`).join(' ')}
               </p>
             )}
           </div>
         )}
         <div className="mt-2 text-sm text-gray-500">
-          {/* Render comments */}
+          {post?.comments?.map((comment => (
+              <div> 
+              <Comment comment={comment}/>
+              </div>
+          )))}
         </div>
         <p className="text-xs text-gray-500 mt-2">{new Date(post.createdAt).toLocaleString()}</p>
       </div>

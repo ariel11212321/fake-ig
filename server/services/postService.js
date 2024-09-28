@@ -19,7 +19,6 @@ const updatePost = async (id, updatedData) => {
         if (updatedData.tags) post.tags = updatedData.tags;
         if (updatedData.location) post.location = updatedData.location;
         if (updatedData.image) post.image = updatedData.image;
-        
         return await post.save();
     } catch (error) {
         throw new Error('Error updating post');

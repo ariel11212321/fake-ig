@@ -10,24 +10,23 @@ import './Profile.css';
 import PopUp from '../Popup';
 import MessageModal from '../MessageModal';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '../../contexts/AppThemeContext';
 
 const Profile = () => {
   const [userPosts, setUserPosts] = useState([]);
   const [isPopUpVisible, setIsPopUpVisible] = useState(false);
-  const [selectedPost, setSelectedPost] = useState<any>(null); 
-  const [editingPostId, setEditingPostId] = useState<string | null>(null); 
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [messageModalContent, setMessageModalContent] = useState({ type: 'info', message: '' });
   const { sendRequest } = useHttp();
   const navigate = useNavigate();
   const { user } = useUser();
   const { token } = useAuth();
+  const { theme } = useTheme();
+
   const photoUrl = `${config.REACT_APP_SERVER_URL}/${user?.photo?.replaceAll("\\", "/")}`;
   const url = `${config.REACT_APP_SERVER_URL}/api/post/${user?.id}/posts`;
-  let deletePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/`;
-  let updatePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/`;
-
-  
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -48,17 +47,17 @@ const Profile = () => {
     navigate("/settings");
   }
 
-  async function editUserDetails() {  
-    
+  async function editUserDetails() {
+    // Implement edit user details logic here
   }
 
-  async function onEditSubmit(postId: string, updatedPost: { caption: string, tags: string[], location: string }) {
-    updatePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/${postId}`;
+  async function onEditSubmit(postId: string, updatedPost: { caption: string; tags: string[]; location: string }) {
+    const updatePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/${postId}`;
     
     try {
       const response = await sendRequest(updatePostUrl, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Authorization': 'Bearer ' + token,
           'Content-Type': 'application/json'
         },
@@ -70,7 +69,7 @@ const Profile = () => {
           type: 'success',
           message: 'Post updated successfully!'
         });
-        setUserPosts((prevPosts: any) => prevPosts.map((post: any) => 
+        setUserPosts((prevPosts: any) => prevPosts.map((post: any) =>
           post._id === postId ? { ...post, ...updatedPost } : post
         ));
         setEditingPostId(null);
@@ -91,7 +90,7 @@ const Profile = () => {
 
   async function onDeleteClicked() {
     if (!selectedPost) return;
-    deletePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/${selectedPost._id}`;
+    const deletePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/${selectedPost._id}`;
     try {
       const response = await sendRequest(deletePostUrl, {
         method: 'DELETE',
@@ -136,9 +135,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="d-flex">
+    <div className={`d-flex ${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`}>
       <Sidebar />
-      <div className="flex-grow-1 p-4" style={{ backgroundColor: '#f8f9fa' }}>
+      <div className={`flex-grow-1 p-4 ${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`}>
         <div className="d-flex flex-column align-items-center mb-4">
           <img
             src={photoUrl}

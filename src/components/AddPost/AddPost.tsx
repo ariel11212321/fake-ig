@@ -5,6 +5,7 @@ import Sidebar from '../Sidebar';
 import { useUser } from '../../contexts/UserContext';
 import { useAuth } from '../../contexts/AuthContext';
 import useHttp from '../../hooks/useHttp';
+import { useTheme } from '../../contexts/AppThemeContext';
 export default function AddPost() {
 
     const [image, setImage] = useState<File | null>(null);
@@ -14,6 +15,7 @@ export default function AddPost() {
     const {user} = useUser();
     const {sendRequest} = useHttp();
     const {token} = useAuth();
+    const {theme} = useTheme();
     const navigate = useNavigate();
 
 
@@ -53,7 +55,7 @@ export default function AddPost() {
       };
 
     return (
-        <div className='d-flex'>
+        <div className={`d-flex ${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`}>
         <Sidebar />
         <div className="container mt-5">
             <h1 className="text-center">Add New Post</h1>
