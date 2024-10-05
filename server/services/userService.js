@@ -2,7 +2,9 @@ const users = require('../models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-exports.getUserById = async (userId) => {
+
+
+const getUserById = async (userId) => {
     try {
       const user = users.findOne({_id: userId});
       return user;  
@@ -10,7 +12,7 @@ exports.getUserById = async (userId) => {
         throw error;
     }
 }
-exports.register = async (username, email, password, photoFile) => {
+const register = async (username, email, password, photoFile) => {
     try {
         const existingUser = await users.findOne({ username });
         if (existingUser) {
@@ -47,11 +49,11 @@ exports.register = async (username, email, password, photoFile) => {
             token
         };
     } catch (err) {
-        throw new Error('Registration failed');
+        throw err;
     }
 };
 
-exports.login = async (username, password) => {
+const login = async (username, password) => {
     try {
 
         const user = await users.findOne({ username });
@@ -80,3 +82,9 @@ exports.login = async (username, password) => {
         throw new Error('Login failed');
     }
 };
+
+module.exports = {
+    login,
+    register,
+    getUserById
+}

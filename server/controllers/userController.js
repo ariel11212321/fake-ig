@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const userService = require('../services/userService');
 
+
 exports.getUserById = async(req, res) => {
     try {
         const {userId} = req.params;
@@ -19,7 +20,6 @@ exports.getUserById = async(req, res) => {
 exports.login = async(req, res) => {
     try {
         const {username, password} = req.body;
-
         const user = await userService.login(username, password);
         if(!user) {
             res.status(404).send({message: "user not found"});

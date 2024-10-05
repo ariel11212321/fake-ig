@@ -7,10 +7,12 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const userRoutes = require('./routes/userRoutes');
 const postRoutes = require('./routes/postRoutes');
+const commentRoutes = require('./routes/commentRoutes');
 const app = express();
 
 
 require('dotenv').config();
+
 
 
 app.use(cors());
@@ -29,6 +31,7 @@ mongoose.connect(process.env.MONGO_URI, {})
 
 app.use("/api", userRoutes);
 app.use("/api", postRoutes);
+app.use("/api", commentRoutes);
 
 
 
