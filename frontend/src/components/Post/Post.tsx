@@ -20,6 +20,7 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
   const [location, setLocation] = useState(post.location);
   const [comments, setComments] = useState(post.comments || []);
   const [isLiked, setIsLiked] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
   const [postUser, setPostUser] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
@@ -38,10 +39,11 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
         headers: { 'Authorization': 'Bearer ' + token }
       });
       setPostUser(response);
+      setIsSaved(user?.savedPosts?.includes(post._id) || false);
     };
-
     fetchUser();
   }, [post.createdBy, sendRequest, token]);
+
 
 
   const handleMessageSubmit = async (e: React.FormEvent) => {
@@ -64,6 +66,34 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
     }
   };
 
+
+  const handleLikeClicked = async () => {
+    try {
+      
+      const url = config.REACT_APP_SERVER_URL + "/api/post/" + (isLiked ? "like" : "unlike");
+      await sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({postId: post._id, author: user?.id}),
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      setIsLiked(!isLiked);
+    } catch(e) {
+    }
+  }
+
+  const savePost = async() => {
+    try {
+      const url = config.REACT_APP_SERVER_URL + "/api/user/" + (isSaved ? "unsave" : "save");
+      await sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({postId: post._id, userId: user?.id}),
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+     
+    } catch(e) {
+      
+    }
+  }
 
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -96,12 +126,16 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
           <div className="flex space-x-4">
             <HeartIcon
               className={`w-7 h-7 cursor-pointer ${isLiked ? 'fill-red-500 text-red-500' : theme === 'dark' ? 'text-white' : 'text-black'}`}
-              onClick={() => setIsLiked(!isLiked)}
+              onClick={() => handleLikeClicked()}
             />
             <MessageCircleIcon onClick={() => setIsOpen(!isOpen)} className="w-7 h-7 cursor-pointer" />
+            <p> {comments.length} </p>
             <SendIcon className="w-7 h-7 cursor-pointer" />
           </div>
-          <BookmarkIcon className="w-7 h-7 cursor-pointer" />
+          <BookmarkIcon 
+      onClick={savePost} 
+      className={`w-7 h-7 cursor-pointer ${isSaved ? 'fill-current' : ''}`} 
+    />
         </div>
         <p className="text-sm font-semibold mb-2">{post.likes} likes</p>
         {edit ? (

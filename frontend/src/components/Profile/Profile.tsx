@@ -14,6 +14,7 @@ import { useTheme } from '../../contexts/AppThemeContext';
 
 const Profile = () => {
   const [userPosts, setUserPosts] = useState([]);
+  const [savedPosts, setSavedPosts] = useState([]);
   const [isPopUpVisible, setIsPopUpVisible] = useState(false);
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
@@ -27,7 +28,7 @@ const Profile = () => {
 
   const photoUrl = `${config.REACT_APP_SERVER_URL}/${user?.photo?.replaceAll("\\", "/")}`;
   const url = `${config.REACT_APP_SERVER_URL}/api/post/${user?.id}/posts`;
-
+  const savedUrl = `${config.REACT_APP_SERVER_URL}/api/post/${user?.id}/savedPosts`;
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -35,11 +36,18 @@ const Profile = () => {
           method: 'GET',
           headers: { 'Authorization': 'Bearer ' + token }
         });
+        const responseSaved = await sendRequest(savedUrl, {
+          method: 'GET',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
         setUserPosts(response);
+        setSavedPosts(responseSaved);
       } catch (error) {
         console.error('Failed to fetch posts:', error);
       }
     };
+
+
     fetchPosts();
   }, [sendRequest, url, token]);
 
@@ -155,6 +163,7 @@ const Profile = () => {
 
         <div className="container">
           <div className="row row-cols-1 row-cols-md-3 g-4">
+            <h1> your posts:</h1>
             {userPosts.map((post: any) => (
               <div className="col" key={post?._id} onClick={() => onPostClick(post)}>
                 <Post 
@@ -166,6 +175,18 @@ const Profile = () => {
             ))}
           </div>
         </div>
+        <h1>
+          Saved Posts:
+        </h1>
+        {savedPosts.map((post: any) => (
+              <div className="col" key={post?._id} onClick={() => onPostClick(post)}>
+                <Post 
+                  post={post} 
+                  edit={false} 
+                  onEditSubmit={null} 
+                />
+              </div>
+            ))}
       </div>
       <PopUp 
         visible={isPopUpVisible && selectedPost} 

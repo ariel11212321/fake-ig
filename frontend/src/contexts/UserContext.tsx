@@ -6,6 +6,7 @@ interface User {
   email?: string;
   password?: string;
   photo: string;
+  savedPosts: [string];
 }
 
 interface UserContextType {

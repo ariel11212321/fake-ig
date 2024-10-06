@@ -12,79 +12,57 @@ const getUserById = async (userId) => {
         throw error;
     }
 }
-const register = async (username, email, password, photoFile) => {
+
+const unsavePost = async (postId, userId) => {
     try {
-        const existingUser = await users.findOne({ username });
-        if (existingUser) {
-            return { error: 'Username already taken' };
+        const user = await users.findById(userId);
+        if(!user) {
+            throw new Error('user not found');
         }
-        const existingEmail = await users.findOne({ email });
-        if (existingEmail) {
-            return { error: 'Email already in use' };
+        if (!user.savedPosts) {
+            user.savedPosts = [];
         }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        
-
-        const photoPath = photoFile ? photoFile.path : null;
-
-        const newUser = new users({
-            username,
-            email,
-            password: hashedPassword,
-            photo: photoPath 
-        });
-        await newUser.save();
-        const token = jwt.sign(
-            { id: newUser._id, username: newUser.username },
-            process.env.JWT_SECRET, 
-            { expiresIn: '1h' } 
-        );
-        return {
-            user: {
-                id: newUser._id,
-                username: newUser.username,
-                email: newUser.email,
-                photo: newUser.photo
-            },
-            token
-        };
-    } catch (err) {
-        throw err;
+        if(user.savedPosts.includes(postId)) {
+            await users.updateOne(
+                { _id: userId },
+                { $pull: { savedPosts: postId } }
+            );
+            return "post unsaved successfully"; 
+        } else {
+            throw new Error('post is not currently saved');
+        }
+    } catch(error) {
+        throw error;
     }
-};
+}
 
-const login = async (username, password) => {
+const savePost = async (postId, userId) => {
     try {
-
-        const user = await users.findOne({ username });
-        if (!user) {
-            return "user not found"; 
+        const user = await users.findById(userId);
+        if(!user) {
+            throw new Error('user not found');
         }
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return "invalid password";
+        if (!user.savedPosts) {
+            user.savedPosts = [];
         }
-        const token = jwt.sign(
-            { id: user._id, username: user.username }, 
-            process.env.JWT_SECRET, 
-            { expiresIn: '1h' } 
-        );
-        return {
-            user: {
-                id: user._id,
-                username: user.username,
-                email: user.email,
-                photo: user.photo
-            },
-            token
-        };
-    } catch (err) {
-        throw new Error('Login failed');
+        if(!user.savedPosts.includes(postId)) {
+            await users.updateOne(
+                { _id: userId },
+                { $addToSet: { savedPosts: postId } }
+            );
+            return "post saved successfully"; 
+        } else {
+            throw new Error('post is already saved');
+        } 
+    } catch(error) {
+        throw error;
     }
-};
+}
+
+
 
 module.exports = {
-    login,
-    register,
-    getUserById
+    getUserById,
+    unsavePost,
+    savePost
 }

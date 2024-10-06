@@ -1,4 +1,5 @@
 const Post = require('../models/Post');
+const User = require('../models/User');
 
 const createPost = async (postData) => {
     try {
@@ -8,6 +9,8 @@ const createPost = async (postData) => {
         throw new Error('Error creating post');
     }
 };
+
+
 
 const updatePost = async (id, updatedData) => {
     try {
@@ -55,6 +58,27 @@ const getUserPosts = async(userId) => {
     }
 }
 
+const getUserSavedPosts = async (userId) => {
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            throw new Error('User not found');
+        }
+
+        const posts = await Promise.all(
+            user.savedPosts.map(async postId => {
+                const post = await Post.findById(postId);
+                return post; 
+            })
+        );
+        return posts.filter(post => post != null);
+
+    } catch (error) {
+        console.error('Error in getUserSavedPosts:', error);
+        throw error;
+    }
+}
+
 const getPostById = async(id) => {
     try {
         const post = await Post.findOne({_id: id});
@@ -64,6 +88,46 @@ const getPostById = async(id) => {
     }
 }
 
+const likePost = async(postId, author) => {
+    try {
+      const post = await Post.findOne({_id: postId});
+      if(post) {
+        if (!post.likes.includes(author)) {
+            post.likes.push(author);
+            await post.save();
+            return post.likes;
+        } else {
+            throw Error('post already liked');
+        }
+      } else {
+        throw Error('post not found');
+      }
+    } catch(e) {
+        throw e;
+    }
+}
+
+const unlikePost = async (postId, author) => {
+    try {
+        const post = await Post.findOne({_id: postId});
+        if (!post) {
+            throw new Error('Post not found');
+        }
+        const likesBefore = post.likes.length;
+        post.likes = post.likes.filter(id => id !== author);
+
+        if (post.likes.length < likesBefore) {
+            await post.save();
+            return { success: true, message: 'Post unliked' };
+        } else {
+            return { success: false, message: 'User had not liked this post' };
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+
 
 module.exports = {
     createPost,
@@ -71,5 +135,8 @@ module.exports = {
     deletePost,
     getPosts,
     getUserPosts,
-    getPostById
+    getUserSavedPosts,
+    getPostById,
+    likePost,
+    unlikePost
 };

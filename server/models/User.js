@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
     },
     photo: {
         type: String
+    },
+    savedPosts: {
+        type: [String],
+        default: []
     }
 });
 userSchema.methods.comparePassword = async function (inputPassword) {

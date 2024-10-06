@@ -25,6 +25,36 @@ const getUserPosts = async(req, res) => {
     }
 }
 
+const getUserSavedPosts = async(req, res) => {
+    try {
+        const { userId } = req.params;
+        const posts = await postService.getUserSavedPosts(userId);
+        res.send(posts);
+    } catch(error) {
+        res.status(500).send('error fetching user posts');
+    }
+}
+
+const likePost = async (req, res) => {
+    const { postId, author } = req.body; 
+    try {
+        const result = await postService.likePost(postId, author); 
+        return res.status(200).json(result);
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message }); 
+    }
+}
+
+const unlikePost = async (req, res) => {
+    const { postId, author } = req.body; 
+    try {
+        const result = await postService.unlikePost(postId, author); 
+        return res.status(200).json(result); 
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message }); 
+    }
+}
+
 const getPostById = async(req, res) => {
     try {
         const { id } = req.params;
@@ -85,5 +115,8 @@ module.exports = {
     deletePost,
     getPosts,
     getUserPosts,
-    getPostById
+    getUserSavedPosts,
+    getPostById,
+    unlikePost,
+    likePost
 };

@@ -17,31 +17,24 @@ exports.getUserById = async(req, res) => {
     }
 }
 
-exports.login = async(req, res) => {
+exports.savePost = async(req, res) => {
     try {
-        const {username, password} = req.body;
-        const user = await userService.login(username, password);
-        if(!user) {
-            res.status(404).send({message: "user not found"});
-        } else {
-            res.send(user);
-        }
+        const {postId, userId} = req.body;
+        const res = await userService.savePost(postId, userId);
+        return res.send({msg: res});
     } catch(e) {
-        res.status(500).send({message: "an error occured"});
+        throw e;
+    }
+}
+
+exports.unsavePost = async(req, res) => {
+    try {
+        const {postId, userId} = req.body;
+        const res = await userService.unsavePost(postId, userId);
+        return res.send({msg: res});
+    } catch(e) {
+        throw e;
     }
 }
 
 
-exports.register = async (req, res) => {
-    try {
-        const { username, email, password } = req.body;
-        const photoFile = req.file; 
-        const result = await userService.register(username, email, password, photoFile);
-        if (result.error) {
-            return res.status(400).send({ message: result.error });
-        }
-        res.status(201).send(result); 
-    } catch (e) {
-        res.status(500).send({ message: e.message });
-    }
-};
