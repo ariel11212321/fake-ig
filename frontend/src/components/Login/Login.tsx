@@ -29,7 +29,8 @@ export default function Login() {
       });
 
       console.log('login successful', response);
-      setUser(response.user);
+      const userData = response.user;
+      setUser({...userData, id: userData._id});
       login(response.token);
       navigate("/home");
     } catch (err) {

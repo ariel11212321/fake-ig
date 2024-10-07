@@ -2,132 +2,93 @@ const Post = require('../models/Post');
 const User = require('../models/User');
 
 const createPost = async (postData) => {
-    try {
-        const post = new Post(postData); 
-        return await post.save();
-    } catch (error) {
-        throw new Error('Error creating post');
-    }
+    const post = new Post(postData);
+    await post.save();
+    return post;
 };
 
-
-
 const updatePost = async (id, updatedData) => {
-    try {
-        const post = await Post.findById(id);
-        if (!post) {
-            return null; 
-        }
-        if (updatedData.caption) post.caption = updatedData.caption;
-        if (updatedData.tags) post.tags = updatedData.tags;
-        if (updatedData.location) post.location = updatedData.location;
-        if (updatedData.image) post.image = updatedData.image;
-        return await post.save();
-    } catch (error) {
-        throw new Error('Error updating post');
+    const post = await Post.findById(id);
+    if (!post) {
+        const error = new Error('Post not found');
+        error.statusCode = 404;
+        throw error;
     }
+    
+    Object.assign(post, updatedData);
+    await post.save();
+    return post;
 };
 
 const deletePost = async (id) => {
-    try {
-        const post = await Post.findByIdAndDelete(id);
-        if (!post) {
-            return null;
-        }
-        return post;
-    } catch (error) {
-        throw new Error('Error deleting post');
+    const post = await Post.findByIdAndDelete(id);
+    if (!post) {
+        const error = new Error('Post not found');
+        error.statusCode = 404;
+        throw error;
     }
+    return { message: 'Post deleted successfully' };
 };
 
 const getPosts = async () => {
-    try {
-        const posts = await Post.find();
-        return posts;
-    } catch (error) {
-        throw error;
-    }
+    return await Post.find();
 };
 
-const getUserPosts = async(userId) => {
-    try {
-        const posts = await Post.find({createdBy: userId});
-        return posts;
-    } catch(error) {
-        throw error;
-    }
-}
+const getUserPosts = async (userId) => {
+    return await Post.find({ createdBy: userId });
+};
 
 const getUserSavedPosts = async (userId) => {
-    try {
-        const user = await User.findById(userId);
-        if (!user) {
-            throw new Error('User not found');
-        }
-
-        const posts = await Promise.all(
-            user.savedPosts.map(async postId => {
-                const post = await Post.findById(postId);
-                return post; 
-            })
-        );
-        return posts.filter(post => post != null);
-
-    } catch (error) {
-        console.error('Error in getUserSavedPosts:', error);
+    const user = await User.findById(userId);
+    if (!user) {
+        const error = new Error('User not found');
+        error.statusCode = 404;
         throw error;
     }
-}
 
-const getPostById = async(id) => {
-    try {
-        const post = await Post.findOne({_id: id});
-        return post;
-    } catch(error) {
+    const posts = await Post.find({ _id: { $in: user.savedPosts } });
+    return posts;
+};
+
+const getPostById = async (id) => {
+    const post = await Post.findById(id);
+    if (!post) {
+        const error = new Error('Post not found');
+        error.statusCode = 404;
         throw error;
     }
-}
+    return post;
+};
 
-const likePost = async(postId, author) => {
-    try {
-      const post = await Post.findOne({_id: postId});
-      if(post) {
-        if (!post.likes.includes(author)) {
-            post.likes.push(author);
-            await post.save();
-            return post.likes;
-        } else {
-            throw Error('post already liked');
-        }
-      } else {
-        throw Error('post not found');
-      }
-    } catch(e) {
-        throw e;
-    }
-}
-
-const unlikePost = async (postId, author) => {
-    try {
-        const post = await Post.findOne({_id: postId});
-        if (!post) {
-            throw new Error('Post not found');
-        }
-        const likesBefore = post.likes.length;
-        post.likes = post.likes.filter(id => id !== author);
-
-        if (post.likes.length < likesBefore) {
-            await post.save();
-            return { success: true, message: 'Post unliked' };
-        } else {
-            return { success: false, message: 'User had not liked this post' };
-        }
-    } catch (error) {
+const likePost = async (postId, userId) => {
+    const post = await Post.findById(postId);
+    if (!post) {
+        const error = new Error('Post not found');
+        error.statusCode = 404;
         throw error;
     }
-}
 
+    if (!post.likes.includes(userId)) {
+        post.likes.push(userId);
+        await post.save();
+    }
 
+    return post;
+};
+
+const unlikePost = async (postId, userId) => {
+    const post = await Post.findById(postId);
+    if (!post) {
+        const error = new Error('Post not found');
+        error.statusCode = 404;
+        throw error;
+    }
+
+    post.likes = post.likes.filter(id => id?.toString() !== userId);
+    await post.save();
+
+    return post;
+};
 
 module.exports = {
     createPost,

@@ -12,6 +12,14 @@ const CommentSchema = new mongoose.Schema({
     created: {
         type: Date,
         default: Date.now
+    },
+    likes: {
+        type: [String],
+        default: []
+    },
+    replys: {
+        type: [String],
+        default: []
     }
    
 });

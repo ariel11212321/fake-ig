@@ -5,15 +5,16 @@ const authenticate = require('../middleware/auth');
 const postController = require('../controllers/postController');
 
 
-router.get('/posts', authenticate, postController.getPosts);
-router.post('/post', authenticate, upload.single('image'), postController.createPost);
-router.post('/post/:id',authenticate, upload.single('image'), postController.updatePost);
-router.post('/post/like', authenticate, postController.likePost);
-router.post('/post/unlike', authenticate, postController.unlikePost);
-router.get('/post/:userId/posts', authenticate, postController.getUserPosts);
-router.get('/post/:userId/savedPosts', authenticate, postController.getUserSavedPosts);
-router.get('/post/:id', authenticate, postController.getPostById);
-router.delete('/post/:id', authenticate, postController.deletePost);
+router.get('/', authenticate, postController.getPosts);
+router.post('/', authenticate, upload.single('image'), postController.createPost);
+router.put('/:id',authenticate, upload.single('image'), postController.updatePost);
+router.get('/:id', authenticate, postController.getPostById);
+router.delete('/:id', authenticate, postController.deletePost);
+router.post('/:postId/like', authenticate, postController.likePost);
+router.post('/:postId/unlike', authenticate, postController.unlikePost);
+router.get('/:userId/posts', authenticate, postController.getUserPosts);
+router.get('/:userId/savedPosts', authenticate, postController.getUserSavedPosts);
+
 
 
 

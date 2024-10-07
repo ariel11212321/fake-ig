@@ -27,8 +27,8 @@ const Profile = () => {
   const { theme } = useTheme();
 
   const photoUrl = `${config.REACT_APP_SERVER_URL}/${user?.photo?.replaceAll("\\", "/")}`;
-  const url = `${config.REACT_APP_SERVER_URL}/api/post/${user?.id}/posts`;
-  const savedUrl = `${config.REACT_APP_SERVER_URL}/api/post/${user?.id}/savedPosts`;
+  const url = `${config.REACT_APP_SERVER_URL}/api/posts/${user?.id}/posts`;
+  const savedUrl = `${config.REACT_APP_SERVER_URL}/api/posts/${user?.id}/savedPosts`;
   useEffect(() => {
     const fetchPosts = async () => {
       try {
@@ -60,7 +60,7 @@ const Profile = () => {
   }
 
   async function onEditSubmit(postId: string, updatedPost: { caption: string; tags: string[]; location: string }) {
-    const updatePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/${postId}`;
+    const updatePostUrl = `${config.REACT_APP_SERVER_URL}/api/posts/${postId}`;
     
     try {
       const response = await sendRequest(updatePostUrl, {
@@ -98,7 +98,7 @@ const Profile = () => {
 
   async function onDeleteClicked() {
     if (!selectedPost) return;
-    const deletePostUrl = `${config.REACT_APP_SERVER_URL}/api/post/${selectedPost._id}`;
+    const deletePostUrl = `${config.REACT_APP_SERVER_URL}/api/posts/${selectedPost._id}`;
     try {
       const response = await sendRequest(deletePostUrl, {
         method: 'DELETE',

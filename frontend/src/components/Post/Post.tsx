@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
-import { HeartIcon, MessageCircleIcon, SendIcon, BookmarkIcon } from 'lucide-react';
+import { HeartIcon, MessageCircleIcon, SendIcon, BookmarkIcon, Share2Icon, TwitterIcon, FacebookIcon, LinkIcon } from 'lucide-react';
 import config from '../../config.json';
 import { useAuth } from '../../contexts/AuthContext';
 import useHttp from '../../hooks/useHttp';
@@ -8,6 +8,7 @@ import Comment from '../Comment';
 import { useTheme } from '../../contexts/AppThemeContext';
 import { useUser } from '../../contexts/UserContext';
 import CommentPopUp from '../CommentPopUp';
+import RoundAvatar from '../ui/RoundAvatar';
 interface PostProps {
   post: any;
   edit: boolean;
@@ -24,6 +25,8 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
   const [postUser, setPostUser] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
+  const [showShareOptions, setShowShareOptions] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const {token} = useAuth();
   const{ theme } = useTheme();
   const {sendRequest} = useHttp();
@@ -34,15 +37,18 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const response = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/user/${post.createdBy}`, {
+      const response = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/users/${post.createdBy}`, {
         method: 'GET',
         headers: { 'Authorization': 'Bearer ' + token }
       });
       setPostUser(response);
-      setIsSaved(user?.savedPosts?.includes(post._id) || false);
     };
+    setIsSaved(user?.savedPosts?.includes(post._id) || false);
+    console.log(user?.savedPosts)
+    setIsLiked(post.likes.includes(user?.id));
+
     fetchUser();
-  }, [post.createdBy, sendRequest, token]);
+  }, [user, post, sendRequest, token]);
 
 
 
@@ -69,30 +75,81 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
 
   const handleLikeClicked = async () => {
     try {
-      
-      const url = config.REACT_APP_SERVER_URL + "/api/post/" + (isLiked ? "like" : "unlike");
-      await sendRequest(url, {
+      const url = `${config.REACT_APP_SERVER_URL}/api/posts/${post._id}/${isLiked ? "unlike" : "like"}`;
+      const response = await sendRequest(url, {
         method: 'POST',
-        body: JSON.stringify({postId: post._id, author: user?.id}),
-        headers: { 'Authorization': 'Bearer ' + token }
+        headers: { 
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ userId: user?.id })
       });
-      setIsLiked(!isLiked);
-    } catch(e) {
+  
+      if (response) {
+        setIsLiked(!isLiked);
+        post.likes = isLiked ? post.likes - 1 : post.likes + 1;
+      }
+    } catch (e) {
+      
+    }
+  };
+
+  const savePost = async () => {
+    try {
+      const newSavedState = !isSaved;
+      const url = `${config.REACT_APP_SERVER_URL}/api/users/${user?.id}/saved-posts`;
+      
+      if (newSavedState) {
+        await sendRequest(url, {
+          method: 'POST',
+          headers: { 
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ postId: post._id })
+        });
+      } else {
+        await sendRequest(`${url}/${post._id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+      }
+      
+      setIsSaved(newSavedState);
+    } catch (e) {
+      console.error('Error saving/unsaving post:', e);
+      // Optionally, notify the user of the error
     }
   }
 
-  const savePost = async() => {
-    try {
-      const url = config.REACT_APP_SERVER_URL + "/api/user/" + (isSaved ? "unsave" : "save");
-      await sendRequest(url, {
-        method: 'POST',
-        body: JSON.stringify({postId: post._id, userId: user?.id}),
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-     
-    } catch(e) {
-      
+  const handleShare = (platform: string) => {
+    const postUrl = `${window.location.origin}/post/${post._id}`; // Adjust this URL structure as needed
+    let shareUrl = '';
+
+    switch (platform) {
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=Check out this post!&url=${encodeURIComponent(postUrl)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`;
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(postUrl).then(() => {
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        });
+        return;
     }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank');
+    }
+    setShowShareOptions(false);
+  };
+
+  const sendIconClicked = (e: any) => {
+    e.stopPropagation();
+    setShowShareOptions(!showShareOptions);
   }
 
 
@@ -109,14 +166,16 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
   }
 
   return (
-    <div className={`${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'} border rounded-lg shadow-md max-w-md mx-auto`}>
+    <div onClick={() => setShowShareOptions(false)} className={`${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'} border rounded-lg shadow-md max-w-md mx-auto`}>
       <div className="flex items-center p-3">
-        <Avatar className="mr-3">
-          <AvatarImage src={`${config.REACT_APP_SERVER_URL + "/" + postUser.image}`} alt={postUser.name} className="w-8 h-8 rounded-full" />
-          <AvatarFallback>{postUser.name}</AvatarFallback>
-        </Avatar>
+      <RoundAvatar
+  style={{ marginRight: '10px' }}
+  src={`${config.REACT_APP_SERVER_URL}/${postUser.photo}`}
+  alt={postUser.username}
+  fallback={postUser.username?.charAt(0).toUpperCase()}
+/>
         <div>
-          <p className="font-semibold text-sm">{postUser.name}</p>
+     
           {post.location && <p className="text-xs text-gray-500">{post.location}</p>}
         </div>
       </div>
@@ -128,16 +187,44 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
               className={`w-7 h-7 cursor-pointer ${isLiked ? 'fill-red-500 text-red-500' : theme === 'dark' ? 'text-white' : 'text-black'}`}
               onClick={() => handleLikeClicked()}
             />
+            <p> {post?.likes?.length}</p>
             <MessageCircleIcon onClick={() => setIsOpen(!isOpen)} className="w-7 h-7 cursor-pointer" />
             <p> {comments.length} </p>
-            <SendIcon className="w-7 h-7 cursor-pointer" />
+            <SendIcon onClick={sendIconClicked} className="w-7 h-7 cursor-pointer" />
           </div>
           <BookmarkIcon 
       onClick={savePost} 
       className={`w-7 h-7 cursor-pointer ${isSaved ? 'fill-current' : ''}`} 
     />
+   {showShareOptions && (
+  <div className="absolute left-1/2 transform -translate-x-1/2 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-10 overflow-hidden">
+    <div className="py-2">
+      <button 
+        onClick={() => handleShare('twitter')} 
+        className="flex items-center justify-center px-4 py-3 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 ease-in-out"
+      >
+        <TwitterIcon className="mr-3" size={18} />
+        Share on Twitter
+      </button>
+      <button 
+        onClick={() => handleShare('facebook')} 
+        className="flex items-center justify-center px-4 py-3 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 ease-in-out"
+      >
+        <FacebookIcon className="mr-3" size={18} />
+        Share on Facebook
+      </button>
+      <button 
+        onClick={() => handleShare('copy')} 
+        className="flex items-center justify-center px-4 py-3 w-full text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition duration-150 ease-in-out"
+      >
+        <LinkIcon className="mr-3" size={18} />
+        Copy Link
+      </button>
+    </div>
+  </div>
+)}
         </div>
-        <p className="text-sm font-semibold mb-2">{post.likes} likes</p>
+      
         {edit ? (
           <form onSubmit={handleSubmit} className="space-y-2">
             <input
@@ -174,6 +261,13 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
             )}
           </div>
         )}
+
+         {copySuccess && (
+                <div className="absolute left-0 mt-2 px-2 py-1 bg-green-500 text-white text-xs rounded">
+                  Link copied!
+                </div>
+          )}
+
        <div className="mt-2 text-sm text-gray-500 space-y-2">
           <CommentPopUp comments={comments} isOpen={isOpen} setIsOpen={setIsOpen}/>
         </div>

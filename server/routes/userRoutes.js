@@ -5,7 +5,8 @@ const { getUserById, savePost, unsavePost } = require('../controllers/userContro
 const upload = require('../config/upload'); 
 
 
-router.get('/user/:userId', authenticate, getUserById);
-router.post('/user/save', authenticate, savePost);
-router.post('/user/unsave', authenticate, unsavePost);
+router.get('/:userId', authenticate, getUserById);
+router.post('/:userId/saved-posts', authenticate, savePost);
+router.delete('/:userId/saved-posts/:postId', authenticate, unsavePost);
+
 module.exports = router;

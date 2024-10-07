@@ -30,9 +30,9 @@ mongoose.connect(process.env.MONGO_URI, {})
 });
 
 
-app.use("/api", userRoutes);
-app.use("/api", postRoutes);
-app.use("/api", commentRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/comments", commentRoutes);
 app.use("/api", authRoutes);
 
 

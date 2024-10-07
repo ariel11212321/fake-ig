@@ -20,7 +20,7 @@ export default function AddPost() {
   const navigate = useNavigate();
 
   const handlePostSubmit = async () => {
-    const url = config.REACT_APP_SERVER_URL + "/api/post";
+    const url = config.REACT_APP_SERVER_URL + "/api/posts";
     try {
       const formData = new FormData();
       formData.append('caption', caption);
