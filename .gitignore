@@ -1,6 +1,7 @@
 # Node modules
 /node_modules
 /server/node_modules
+/server/uploads
 frontend/node_modules
 /src/config.json
 /server/server.cert
