@@ -9,6 +9,7 @@ import { useTheme } from '../../contexts/AppThemeContext';
 import { useUser } from '../../contexts/UserContext';
 import CommentPopUp from '../CommentPopUp';
 import RoundAvatar from '../ui/RoundAvatar';
+import { useNavigate } from 'react-router-dom';
 interface PostProps {
   post: any;
   edit: boolean;
@@ -27,10 +28,15 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
   const [message, setMessage] = useState('');
   const [showShareOptions, setShowShareOptions] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
-  const {token} = useAuth();
+  const {token, isAuthenticated} = useAuth();
   const{ theme } = useTheme();
   const {sendRequest} = useHttp();
   const {user} = useUser();
+  const navigate = useNavigate();
+
+  if(!isAuthenticated) {
+    navigate("/");
+  }
 
   
 
@@ -51,17 +57,20 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
   }, [user, post, sendRequest, token]);
 
 
+  const gotoProfile = () =>  {
+      navigate("/profile", {state: {user: {...postUser, id: postUser._id}}}); 
+  }
 
   const handleMessageSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const comment = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/comment`, {
+      const comment = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ' + token,
         },
-        body: JSON.stringify({ author: user?.id, text: message, post_id: post._id }),
+        body: JSON.stringify({ author: user?.id, text: message, postId: post._id }),
       });
       setMessage('');
       console.log(comment);
@@ -168,12 +177,14 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
   return (
     <div onClick={() => setShowShareOptions(false)} className={`${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'} border rounded-lg shadow-md max-w-md mx-auto`}>
       <div className="flex items-center p-3">
+      <div onClick={() => gotoProfile()}>
       <RoundAvatar
   style={{ marginRight: '10px' }}
   src={`${config.REACT_APP_SERVER_URL}/${postUser.photo}`}
   alt={postUser.username}
   fallback={postUser.username?.charAt(0).toUpperCase()}
 />
+      </div>
         <div>
      
           {post.location && <p className="text-xs text-gray-500">{post.location}</p>}

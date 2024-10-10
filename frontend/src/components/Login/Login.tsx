@@ -11,7 +11,10 @@ export default function Login() {
   const navigate = useNavigate();
   const { setUser } = useUser();
   const { login } = useAuth();
-  const { sendRequest, error, isLoading } = useHttp();
+  const { sendRequest } = useHttp();
+
+  
+
 
   const handleLogin = async () => {
     let url: string = config.REACT_APP_SERVER_URL + "/api/login" || "";

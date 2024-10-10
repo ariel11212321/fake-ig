@@ -15,9 +15,13 @@ export default function AddPost() {
   const [location, setLocation] = useState('');
   const { user } = useUser();
   const { sendRequest } = useHttp();
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
+
+  if(!isAuthenticated) {
+      navigate("/");
+  }
 
   const handlePostSubmit = async () => {
     const url = config.REACT_APP_SERVER_URL + "/api/posts";

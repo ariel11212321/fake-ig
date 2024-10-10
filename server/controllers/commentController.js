@@ -2,8 +2,8 @@ const commentService = require('../services/commentService');
 
 const createComment = async (req, res) => {
     try {
-        const { text, author } = req.body;
-        const { postId } = req.params;
+        const { text, author, postId } = req.body;
+       
         const comment = await commentService.createComment({ text, author, postId });
         res.status(201).json({ message: 'Comment created successfully', comment });
     } catch (error) {
@@ -54,19 +54,24 @@ const getPostComments = async (req, res) => {
 const likeComment = async(req, res) => {
     try {
         const {id, userId} = req.params;
-        
+        const comment = await commentService.likeComment(id, userId);
+        res.status(200).json(comment);
+    } catch (error) {
+        res.status(error.statusCode || 500).json({ message: error.message });
+    }
+};
+const unlikeComment = async(req, res) => {
+    try {
+        const {id, userId} = req.params;
+        const comment = await commentService.unlikeComment(id, userId);
+        res.status(200).json(comment);
     } catch (error) {
         res.status(error.statusCode || 500).json({ message: error.message });
     }
 };
 
-const unlikeComment = async(req, res) => {
-    try {
-        
-    } catch (error) {
-        res.status(error.statusCode || 500).json({ message: error.message });
-    }
-};
+
+
 module.exports = {
     createComment,
     getComment,

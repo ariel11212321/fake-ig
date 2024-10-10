@@ -3,11 +3,19 @@ import React from 'react';
 import { useTheme } from '../../contexts/AppThemeContext';
 import { Card, Form } from 'react-bootstrap';
 import Sidebar from '../Sidebar/Sidebar';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 
 const Settings: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
 
+  const {isAuthenticated} = useAuth();
+  const navigate = useNavigate();
+
+  if(!isAuthenticated) {
+    navigate("/");
+  }
   return (
     <div className={`d-flex ${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`}>
       <Sidebar />

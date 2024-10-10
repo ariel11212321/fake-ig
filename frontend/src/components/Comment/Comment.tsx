@@ -4,6 +4,8 @@ import useHttp from "../../hooks/useHttp";
 import { useAuth } from "../../contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { Heart } from 'lucide-react';
+import { useUser } from "../../contexts/UserContext";
+import { useNavigate } from "react-router-dom";
 
 interface CommentData {
   author: string;
@@ -21,8 +23,17 @@ export default function Comment({id}: {id: string}) {
   const [comment, setComment] = useState<CommentData>({author: "", text: "", createdAt: "", likes: []});
   const [commentAuthor, setCommentAuthor] = useState<CommentAuthor>({username: ""});
   const [error, setError] = useState<string | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
   const {sendRequest} = useHttp();
-  const {token} = useAuth();    
+  const {token, isAuthenticated} = useAuth();
+  const {user} = useUser();
+  const navigate = useNavigate();
+
+
+  if(!isAuthenticated) {
+    navigate("/");
+  }
+
 
   async function fetchComment() {
     try {
@@ -32,11 +43,37 @@ export default function Comment({id}: {id: string}) {
       }); 
       setComment(response);
       setError(null);
+
     } catch(e) {
       console.error(e);
       setError("Failed to fetch comment");
     }
   };
+
+  async function likeComment() {
+    setIsLiked(!isLiked);
+   try {
+    if(isLiked) {
+      const response = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/comments/${id}/${user?.id}/like`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if(!response.ok) {
+        setIsLiked(!isLiked);
+      }
+     } else {
+      const response = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/comments/${id}/${user?.id}/like`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      if(!response.ok) {
+        setIsLiked(!isLiked);
+      }
+     }
+   } catch(e) {
+      
+   }
+  }
 
   async function fetchCommentUser() {
     if (!comment.author) return;
@@ -101,7 +138,9 @@ export default function Comment({id}: {id: string}) {
           <button className="font-semibold">Reply</button>
         </div>
       </div>
-      <button className="text-gray-500 hover:text-gray-700">
+      <button 
+        className={`text-gray-500 hover:text-gray-700 ${isLiked ? 'fill-current text-red-500' : ''}`}
+        onClick={() => likeComment()}>
         <Heart size={16} />
       </button>
     </div>

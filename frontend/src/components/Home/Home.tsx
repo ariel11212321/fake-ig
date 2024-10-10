@@ -14,8 +14,12 @@ export default function Home() {
   const [posts, setPosts] = useState([]);
   const navigate = useNavigate();
   const { sendRequest, error, isLoading } = useHttp();
-  const {token} = useAuth();
+  const {token, isAuthenticated} = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  if(!isAuthenticated) {
+    navigate("/");
+  }
 
   useEffect(() => {
 

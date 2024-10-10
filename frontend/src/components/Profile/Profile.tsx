@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sidebar from '../Sidebar';
 import { useUser } from '../../contexts/UserContext';
@@ -9,10 +10,13 @@ import Post from '../Post';
 import './Profile.css';
 import PopUp from '../Popup';
 import MessageModal from '../MessageModal';
-import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../contexts/AppThemeContext';
 
 const Profile = () => {
+  const location = useLocation();
+  const { user: loggedInUser } = useUser();
+  const [profileUser, setProfileUser] = useState<any>(null);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [userPosts, setUserPosts] = useState([]);
   const [savedPosts, setSavedPosts] = useState([]);
   const [isPopUpVisible, setIsPopUpVisible] = useState(false);
@@ -22,15 +26,29 @@ const Profile = () => {
   const [messageModalContent, setMessageModalContent] = useState({ type: 'info', message: '' });
   const { sendRequest } = useHttp();
   const navigate = useNavigate();
-  const { user } = useUser();
   const { token } = useAuth();
   const { theme } = useTheme();
 
-  const photoUrl = `${config.REACT_APP_SERVER_URL}/${user?.photo?.replaceAll("\\", "/")}`;
-  const url = `${config.REACT_APP_SERVER_URL}/api/posts/${user?.id}/posts`;
-  const savedUrl = `${config.REACT_APP_SERVER_URL}/api/posts/${user?.id}/savedPosts`;
+  useEffect(() => {
+    const userFromLocation = location.state?.user;
+    
+    if (userFromLocation) {
+      setProfileUser(userFromLocation);
+      setIsOwnProfile(userFromLocation.id === loggedInUser?.id);
+    } else {
+      setProfileUser(loggedInUser);
+      setIsOwnProfile(true);
+    }
+  }, [location.state, loggedInUser]);
+
+  const photoUrl = profileUser?.photo ? `${config.REACT_APP_SERVER_URL}/${profileUser.photo.replaceAll("\\", "/")}` : '';
+  const url = `${config.REACT_APP_SERVER_URL}/api/posts/${profileUser?.id}/posts`;
+  const savedUrl = `${config.REACT_APP_SERVER_URL}/api/posts/${profileUser?.id}/savedPosts`;
+
   useEffect(() => {
     const fetchPosts = async () => {
+      if (!profileUser) return;
+      
       try {
         const response = await sendRequest(url, {
           method: 'GET',
@@ -47,9 +65,8 @@ const Profile = () => {
       }
     };
 
-
     fetchPosts();
-  }, [sendRequest, url, token]);
+  }, [sendRequest, url, savedUrl, token, profileUser]);
 
   function gotoSettings() {
     navigate("/settings");
@@ -129,17 +146,16 @@ const Profile = () => {
 
   async function onEditClicked(event: React.MouseEvent) {
     event.preventDefault();
-    setEditingPostId(selectedPost._id); // Set the post to be edited
-    setIsPopUpVisible(false); // Hide the popup during editing
+    setEditingPostId(selectedPost._id);
+    setIsPopUpVisible(false);
   }
 
   function onPostClick(post: any) {
     if (editingPostId === post._id) {
-      // Don't open the popup if this post is already being edited
       return;
     }
     setIsPopUpVisible(true);
-    setSelectedPost(post); // Set the post related to the popup
+    setSelectedPost(post);
   }
 
   return (
@@ -153,17 +169,19 @@ const Profile = () => {
             className="rounded-circle img-thumbnail mb-3"
             style={{ width: '150px', height: '150px' }}
           />
-          <h2 className="fw-bold">{user?.username}</h2>
-          <p className="text-muted">{user?.email}</p>
-          <div className="d-flex gap-2">
-            <button onClick={() => editUserDetails()} className="btn btn-outline-primary">Edit Profile</button>
-            <button onClick={() => gotoSettings()} className="btn btn-outline-secondary">Settings</button>
-          </div>
+          <h2 className="fw-bold">{profileUser?.username}</h2>
+          <p className="text-muted">{profileUser?.email}</p>
+          {isOwnProfile && (
+            <div className="d-flex gap-2">
+              <button onClick={() => editUserDetails()} className="btn btn-outline-primary">Edit Profile</button>
+              <button onClick={() => gotoSettings()} className="btn btn-outline-secondary">Settings</button>
+            </div>
+          )}
         </div>
 
         <div className="container">
           <div className="row row-cols-1 row-cols-md-3 g-4">
-            <h1> your posts:</h1>
+            <h1>Posts:</h1>
             {userPosts.map((post: any) => (
               <div className="col" key={post?._id} onClick={() => onPostClick(post)}>
                 <Post 
@@ -175,10 +193,10 @@ const Profile = () => {
             ))}
           </div>
         </div>
-        <h1>
-          Saved Posts:
-        </h1>
-        {savedPosts.map((post: any) => (
+        {isOwnProfile && (
+          <>
+            <h1>Saved Posts:</h1>
+            {savedPosts.map((post: any) => (
               <div className="col" key={post?._id} onClick={() => onPostClick(post)}>
                 <Post 
                   post={post} 
@@ -187,13 +205,17 @@ const Profile = () => {
                 />
               </div>
             ))}
+          </>
+        )}
       </div>
-      <PopUp 
-        visible={isPopUpVisible && selectedPost} 
-        setVisible={setIsPopUpVisible} 
-        onDeleteClicked={onDeleteClicked} 
-        onEditClicked={onEditClicked} 
-      />
+      {isOwnProfile && (
+        <PopUp 
+          visible={isPopUpVisible && selectedPost} 
+          setVisible={setIsPopUpVisible} 
+          onDeleteClicked={onDeleteClicked} 
+          onEditClicked={onEditClicked} 
+        />
+      )}
       <MessageModal
         show={showMessageModal}
         onHide={() => setShowMessageModal(false)}
