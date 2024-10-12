@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import config from '../../config.json';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../Sidebar';
@@ -19,9 +19,11 @@ export default function AddPost() {
   const { theme } = useTheme();
   const navigate = useNavigate();
 
-  if(!isAuthenticated) {
+  useEffect(() => {
+    if(!isAuthenticated) {
       navigate("/");
-  }
+    }
+  }, []);
 
   const handlePostSubmit = async () => {
     const url = config.REACT_APP_SERVER_URL + "/api/posts";
@@ -121,7 +123,7 @@ export default function AddPost() {
               </div>
               <motion.button
                 type="submit"
-                onClick={() => handlePostSubmit()}
+                onClick={handlePostSubmit}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import { HeartIcon, MessageCircleIcon, SendIcon, BookmarkIcon, Share2Icon, TwitterIcon, FacebookIcon, LinkIcon } from 'lucide-react';
 import config from '../../config.json';
@@ -34,27 +34,24 @@ export default function Post({ post, edit, onEditSubmit }: PostProps) {
   const {user} = useUser();
   const navigate = useNavigate();
 
-  if(!isAuthenticated) {
-    navigate("/");
-  }
-
   
-
-
+  const fetchUser = useCallback(async() => {
+    const response = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/users/${post.createdBy}`, {
+      method: 'GET',
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    setPostUser(response);
+  }, [post.createdBy, sendRequest, token]);
+  
   useEffect(() => {
-    const fetchUser = async () => {
-      const response = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/users/${post.createdBy}`, {
-        method: 'GET',
-        headers: { 'Authorization': 'Bearer ' + token }
-      });
-      setPostUser(response);
-    };
+    if(!isAuthenticated) {
+      navigate("/");
+    }
+    fetchUser();
     setIsSaved(user?.savedPosts?.includes(post._id) || false);
     console.log(user?.savedPosts)
     setIsLiked(post.likes.includes(user?.id));
-
-    fetchUser();
-  }, [user, post, sendRequest, token]);
+  }, [fetchUser, user, post]);
 
 
   const gotoProfile = () =>  {

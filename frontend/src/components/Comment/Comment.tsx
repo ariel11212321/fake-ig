@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import config from '../../config.json';
 import useHttp from "../../hooks/useHttp";
 import { useAuth } from "../../contexts/AuthContext";
@@ -19,6 +19,21 @@ interface CommentAuthor {
   photo?: string;
 }
 
+const timeAgo = (date: string) => {
+  const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
+  let interval = seconds / 31536000;
+  if (interval > 1) return Math.floor(interval) + "y";
+  interval = seconds / 2592000;
+  if (interval > 1) return Math.floor(interval) + "m";
+  interval = seconds / 86400;
+  if (interval > 1) return Math.floor(interval) + "d";
+  interval = seconds / 3600;
+  if (interval > 1) return Math.floor(interval) + "h";
+  interval = seconds / 60;
+  if (interval > 1) return Math.floor(interval) + "m";
+  return Math.floor(seconds) + "s";
+};
+
 export default function Comment({id}: {id: string}) {
   const [comment, setComment] = useState<CommentData>({author: "", text: "", createdAt: "", likes: []});
   const [commentAuthor, setCommentAuthor] = useState<CommentAuthor>({username: ""});
@@ -30,12 +45,10 @@ export default function Comment({id}: {id: string}) {
   const navigate = useNavigate();
 
 
-  if(!isAuthenticated) {
-    navigate("/");
-  }
+  
 
 
-  async function fetchComment() {
+  const fetchComment = useCallback(async () => {
     try {
       const response = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/comments/${id}`, {
         method: 'GET',
@@ -43,14 +56,13 @@ export default function Comment({id}: {id: string}) {
       }); 
       setComment(response);
       setError(null);
-
     } catch(e) {
       console.error(e);
       setError("Failed to fetch comment");
     }
-  };
+  }, [id, sendRequest, token]);
 
-  async function likeComment() {
+  const likeComment = useCallback(async() => {
     setIsLiked(!isLiked);
    try {
     if(isLiked) {
@@ -73,9 +85,9 @@ export default function Comment({id}: {id: string}) {
    } catch(e) {
       
    }
-  }
+  }, [id, user?.id, sendRequest, token]);
 
-  async function fetchCommentUser() {
+  const fetchCommentUser = useCallback(async () => {
     if (!comment.author) return;
     try {
       const responseAuthor = await sendRequest(`${config.REACT_APP_SERVER_URL}/api/users/${comment.author}`, {
@@ -88,9 +100,12 @@ export default function Comment({id}: {id: string}) {
       console.error(e?.message);
       setError("Failed to fetch user information");
     }
-  }
+  }, [comment.author, sendRequest, token]);
 
   useEffect(() => {
+    if(!isAuthenticated) {
+      navigate("/");
+    }
     fetchComment();
   }, [id]);
 
@@ -104,20 +119,7 @@ export default function Comment({id}: {id: string}) {
     return <div className="text-red-500 text-sm">{error}</div>;
   }
 
-  const timeAgo = (date: string) => {
-    const seconds = Math.floor((new Date().getTime() - new Date(date).getTime()) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + "y";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + "m";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + "d";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + "h";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + "m";
-    return Math.floor(seconds) + "s";
-  };
+ 
 
   return (
     <div key={id} className="flex items-start space-x-3 mb-3 text-sm">

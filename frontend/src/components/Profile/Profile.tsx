@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sidebar from '../Sidebar';
@@ -73,10 +73,10 @@ const Profile = () => {
   }
 
   async function editUserDetails() {
-    // Implement edit user details logic here
+    
   }
 
-  async function onEditSubmit(postId: string, updatedPost: { caption: string; tags: string[]; location: string }) {
+  const onEditSubmit = useCallback(async (postId: string, updatedPost: { caption: string; tags: string[]; location: string }) => {
     const updatePostUrl = `${config.REACT_APP_SERVER_URL}/api/posts/${postId}`;
     
     try {
@@ -111,7 +111,7 @@ const Profile = () => {
       });
     }
     setShowMessageModal(true);
-  }
+  }, [sendRequest, token, setMessageModalContent, setUserPosts, setEditingPostId, setShowMessageModal]);
 
   async function onDeleteClicked() {
     if (!selectedPost) return;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Sidebar from '../Sidebar';
 import { useUser } from '../../contexts/UserContext';
@@ -17,30 +17,25 @@ export default function Home() {
   const {token, isAuthenticated} = useAuth();
   const { theme, toggleTheme } = useTheme();
 
-  if(!isAuthenticated) {
-    navigate("/");
-  }
+  const fetchPosts = useCallback(async () => {
+    const url = `${config.REACT_APP_SERVER_URL}/api/posts`;
+    try {
+      const responseData = await sendRequest(url, {
+        method: 'GET', 
+        headers: {'Authorization': 'Bearer ' + token}
+      });
+      setPosts(responseData); 
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+    }
+  }, [sendRequest, token]);
 
   useEffect(() => {
-
-    if(!token) {
-      navigate("/login");
+    if(!isAuthenticated) {
+      navigate("/");
     }
-
-    const fetchPosts = async () => {
-      const url = `${config.REACT_APP_SERVER_URL}/api/posts`;
-      try {
-        const responseData = await sendRequest(url, {
-          method: 'GET', headers: {'Authorization': 'Bearer ' + token}
-        });
-        setPosts(responseData); 
-      } catch (error) {
-        console.error('Failed to fetch posts:', error);
-      }
-    };
-
     fetchPosts();
-  }, [sendRequest, token]);
+  }, [fetchPosts, token, navigate]);
 
   return (
     <div className={`d-flex ${theme === 'dark' ? 'bg-dark text-light' : 'bg-light text-dark'}`}>

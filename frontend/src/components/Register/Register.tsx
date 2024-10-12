@@ -13,9 +13,6 @@ export default function Register() {
   const navigate = useNavigate();
   const { sendRequest, error, isLoading } = useHttp();
 
-
-
-
   const handleRegister = async () => {
     if (password !== confirmPassword) {
       alert('Passwords do not match');
