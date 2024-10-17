@@ -1,3 +1,9 @@
+ ![Login Screen](images/login.png)
+   ![Home Feed](images/home.png)
+   ![Profile Screen](images/profile.png)
+
+
+
 # Instagram Clone
 
 ## Overview
