@@ -30,7 +30,7 @@ This project is an Instagram-like application that allows users to share photos,
 - Frontend: React.js
 - Backend: Node.js with Express.js
 - Database: MongoDB
-- Image Storage: Amazon S3 or similar cloud storage
+
 
 ## Installation
 
