@@ -25,7 +25,7 @@ const register = async ({ username, email, password, photoFile }) => {
     const token = generateToken(newUser);
 
     return {
-        user,
+        user: newUser,
         token
     };
 };

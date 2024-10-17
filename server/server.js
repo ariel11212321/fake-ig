@@ -16,7 +16,8 @@ require('dotenv').config();
 
 
 
-app.use(cors());
+
+app.use(cors())
 app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -29,6 +30,10 @@ mongoose.connect(process.env.MONGO_URI, {})
     console.error('MongoDB connection error:', err);
 });
 
+
+app.get("/", (req, res) => {
+    res.send("Fake Instagram Server");
+});
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
